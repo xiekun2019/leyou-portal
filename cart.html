@@ -270,7 +270,11 @@
         },
         created(){
             ly.verify().then(res=>{
-
+                // 用户已登录，在redis中查询
+                ly.http.get("/cart").then(({data})=>{
+                    this.carts = data;
+                    this.selected = this.carts;
+                });
             }).catch(()=>{
                 // 未登录购物车的查询
                 this.carts = ly.store.get("LEYOU_CART");
