@@ -535,6 +535,10 @@ const ly = leyou = {
      * 发起ajax请求工具，底层依然是axios
      */
     http: axios,
+    verify(){
+        // 用来判断用户是否登录
+        return ly.http.get("/auth/verify")
+    },
     store: {
         set(key, value) {
             localStorage.setItem(key, JSON.stringify(value));
