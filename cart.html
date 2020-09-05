@@ -65,7 +65,7 @@
                                 </li>
                                 <li class="yui3-u-1-8"><span style="line-height:70px " class="sum">{{ly.formatPrice(cart.price*cart.num)}}</span></li>
                                 <li class="yui3-u-1-8">
-                                    <a href="javascript:void(0);" @click="deleteCart(index)">删除</a><br />
+                                    <a href="javascript:void(0)" @click="deleteCart(index, cart.skuId)">删除</a><br />
                                     <a href="#none">移到我的关注</a>
                                 </li>
                             </ul>
@@ -270,7 +270,20 @@
         },
         created(){
             ly.verify().then(res=>{
-                // 用户已登录，在redis中查询
+                if(ly.store.get("LEYOU_CART")){ // 如果存在本地数据
+                    ly.store.get("LEYOU_CART").forEach(cart_local=>{
+                        // 用户已登录，先把本地localStorage中的数据提交到redis中
+                        ly.http.post("/cart", {
+                            skuId: cart_local.skuId,
+                            num: cart_local.num
+                        }).then(res=>{
+                            window.location = window.location = "http://www.leyou.com/cart.html";
+                        });
+                    })
+                    // 删除本地localStorage中的数据，防止多次提交
+                    ly.store.del("LEYOU_CART")
+                }
+                // 然后在redis中查询
                 ly.http.get("/cart").then(({data})=>{
                     this.carts = data;
                     this.selected = this.carts;
@@ -304,7 +317,7 @@
             incr(cart){
                 cart.num++;
                 ly.verify().then(res=>{
-
+                    ly.http.put("/cart", {skuId: cart.skuId, num: cart.num});
                 }).catch(()=>{
                     ly.store.set("LEYOU_CART", this.carts);
                 })
@@ -314,7 +327,7 @@
                     cart.num--;
                 }
                 ly.verify().then(res=>{
-
+                    ly.http.put("/cart", {skuId: cart.skuId, num: cart.num});
                 }).catch(()=>{
                     ly.store.set("LEYOU_CART", this.carts);
                 })
@@ -327,9 +340,14 @@
                 }
 
             },
-            deleteCart(index){
+            deleteCart(index, skuId){
                 ly.verify().then(res=>{
-
+                    ly.http.delete("/cart/" + skuId).then(res=>{
+                        ly.http.get("/cart").then(({data})=>{
+                            this.carts = data;
+                            this.selected = this.carts;
+                        });
+                    });
                 }).catch(()=>{
                     this.carts.splice(index, 1);
                     ly.store.set("LEYOU_CART", this.carts);
