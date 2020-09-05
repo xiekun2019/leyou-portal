@@ -285,7 +285,7 @@
 								}
 							]
 						}).then(({data})=>{ //返回的是订单编号
-							window.location = "http://www.leyou.com/pay.html?orderId=" + data;
+							window.location = "http://www.leyou.com/pay.html?orderId=" + data + "&actualPrice=" + this.actualPrice;
 						})
 					}).catch(()=>{
 						// 未登录
